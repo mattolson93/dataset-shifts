@@ -1,0 +1,66 @@
+{
+ "a": {
+  "task1_page": "noncluster.html",
+  "task1_data": "og_nearest_eye.json",
+  "task1_form": "eye",
+  "task2_page": "cluster.html",
+  "task2_data": "og_cluster_hat.json",
+  "task2_form": "hat"
+ },
+ "b": {
+  "task1_page": "noncluster.html",
+  "task1_data": "dr_nearest_eye.json",
+  "task1_form": "eye",
+  "task2_page": "cluster.html",
+  "task2_data": "dr_cluster_hat.json",
+  "task2_form": "hat"
+ },
+ "c": {
+  "task1_page": "cluster.html",
+  "task1_data": "og_cluster_hat.json",
+  "task1_form": "hat",
+  "task2_page": "noncluster.html",
+  "task2_data": "og_nearest_eye.json",
+  "task2_form": "eye"
+ },
+ "d": {
+  "task1_page": "cluster.html",
+  "task1_data": "dr_cluster_hat.json",
+  "task1_form": "hat",
+  "task2_page": "noncluster.html",
+  "task2_data": "dr_nearest_eye.json",
+  "task2_form": "eye"
+ },
+ "e": {
+  "task1_page": "noncluster.html",
+  "task1_data": "og_nearest_hat.json",
+  "task1_form": "hat",
+  "task2_page": "cluster.html",
+  "task2_data": "og_cluster_eye.json",
+  "task2_form": "eye"
+ },
+ "f": {
+  "task1_page": "noncluster.html",
+  "task1_data": "dr_nearest_hat.json",
+  "task1_form": "hat",
+  "task2_page": "cluster.html",
+  "task2_data": "dr_cluster_eye.json",
+  "task2_form": "eye"
+ },
+ "g": {
+  "task1_page": "cluster.html",
+  "task1_data": "og_cluster_eye.json",
+  "task1_form": "eye",
+  "task2_page": "noncluster.html",
+  "task2_data": "og_nearest_hat.json",
+  "task2_form": "hat"
+ },
+ "h": {
+  "task1_page": "cluster.html",
+  "task1_data": "dr_cluster_eye.json",
+  "task1_form": "eye",
+  "task2_page": "noncluster.html",
+  "task2_data": "dr_nearest_hat.json",
+  "task2_form": "hat"
+ }
+}

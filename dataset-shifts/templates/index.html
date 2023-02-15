@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<script src="https://d3js.org/d3.v3.min.js" charset="utf-8"></script>
+	<link rel="stylesheet" href="static/styles.css">
+	<script src="static/js/cluster.js"></script>
+	<script src="static/js/script.js"></script>
+	<script>
+	function myFunction() {
+		var x = document.getElementById("training");
+		var y = document.getElementById("testing");
+
+		if (x.style.display === "none") {
+			x.style.display = "block";
+			y.style.display = "none";
+
+		} else {
+			x.style.display = "none";
+			y.style.display = "block";
+
+		}
+	}
+	</script>
+</head>
+<body>
+	<h1> Dataset Shifts </h1>
+	<div id ="training">
+		<button onclick="myFunction()"> Switch to Cluster</button>
+		<br>
+
+		<div id="score_box">
+			<h2> Train Images </h2>
+		</div>
+
+		<div id="score_outlier_box">
+			<h2> Test Images </h2>
+		</div>
+	</div>
+
+	<div id="testing" style="display: none">
+		<button onclick="myFunction()"> Switch to Score</button>
+		<br>
+
+		<div id="cluster_train">
+			<h2> Train Cluster </h2>
+			<div id = "train_cluster1"></div>
+			<div id = "train_luster2"></div>
+			<div id = "train_cluster3"></div>
+			<div id = "train_cluster4"></div>
+		</div>
+	
+		<div id="cluster">
+			<h2> Test Cluster </h2>
+			<div id = "cluster1"></div>
+			<div id = "cluster2"></div>
+			<div id = "cluster3"></div>
+			<div id = "cluster4"></div>
+		</div>
+	</div>
+
+	<h1>Hello {{ num_clusters }}!</h1>
+
+
+	<div id="u_maps"> 
+		<div id ="umap_density">
+			<h3> UMAP Density Space</h3>
+
+		</div>
+		<div id ="umap_orig">
+			<h3> UMAP Original Space </h3>
+
+		</div>
+	</div>
+
+	<div id="optional">
+		<div id="selected_img">
+			<div id="img_selected"> </div>
+			<div id="img_selected_prop"> </div>
+		</div>
+
+		<div id="density">
+			<div id="density_sim_train"> Density Train</div>
+			<div id="density_sim_test"> Density Test</div>
+		</div>
+
+		<div id ="orig">
+			<div id="orig_sim_train"> Orig Train</div>
+			<div id="orig_sim_test"> Density Train</div>
+		</div>
+	</div>
+
+</body>
+</html>

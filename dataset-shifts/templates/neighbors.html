@@ -1,0 +1,117 @@
+{% extends "base.html" -%}
+
+{% block content -%}
+
+<script>
+// document state
+let last_clicked_image = null
+
+</script>
+
+
+    
+<div class="container">
+    <div id="trainset_box" class="box_panel">
+    <h2> Training set images </h2>
+    <ul class="image_list">
+        {% for score in data['train'] %}
+        <li>
+            <img 
+            id="image-{{score.id}}"
+            src="/static/{{score.path[1:]}}"
+            data-id="{{score.id}}"
+            data-closest-evals="{{score.closest_evals}}">
+        </li>
+        {% endfor %}
+    </ul>
+    </div>
+
+
+    <div id="testset_box" class="box_panel">
+    <h2> Test set images </h2>
+    <ul class="image_list">
+        {% for score in data['test'] %}
+        <li>
+            <img 
+            id="image-{{score.id}}"
+            src="/static/{{score.path[1:]}}"
+            data-id="{{score.id}}"
+            data-closest-evals="{{score.closest_evals}}"
+            data-closest-trains="{{score.closest_trains}}">
+        </li>
+        {% endfor %}
+    </ul>
+    </div>
+
+
+    <div id="umap_train" class="umap">
+        <h3> UMAP Density Space train</h3>
+        <svg width="{{umap_size + 20}}" height="{{umap_size + 20}}">
+            <g id="umap_density_circles" transform="translate(10,10)">
+            {% for item in data['train']|reverse %}
+                <circle id="umap-{{item.id}}" data-id="{{item.id}}" cx="{{item.emb_x * umap_size}}" cy="{{(1.0 - item.emb_y) * umap_size}}" r="3"></circle>
+            {% endfor %}
+            </g>
+        </svg>
+    </div>
+    
+    <div id="umap_test" class="umap">
+        <h3> UMAP Density Space test</h3>
+        <svg width="{{umap_size + 20}}" height="{{umap_size + 20}}">
+            <g id="umap_density_circles" transform="translate(10,10)">
+            {% for item in data['test']|reverse %}
+                <circle id="umap-{{item.id}}" data-id="{{item.id}}" cx="{{item.emb_x * umap_size}}" cy="{{(1.0 - item.emb_y) * umap_size}}" r="3"></circle>
+            {% endfor %}
+            </g>
+        </svg>
+    </div>
+</div>
+
+
+<script>
+d3.selectAll(".umap circle")
+    .on("mouseover", function(event) {
+        const image_id = d3.select(this).attr("data-id");
+        console.log(image_id)
+        d3.select(`#image-${image_id}`).classed("hovered", true);
+        d3.select(`#umap-${image_id}`).classed("hovered", true);
+    })
+    .on("mouseout", function(event) {
+        const image_id = d3.select(this).attr("data-id");
+        d3.select(`#image-${image_id}`).classed("hovered", false);
+        d3.select(`#umap-${image_id}`).classed("hovered", false);  
+    });
+
+d3.selectAll(".box_panel img")
+    .on("mouseover", function(event) {
+        const image_id = d3.select(this).attr("data-id");
+        console.log(image_id);
+        d3.select(`#image-${image_id}`).classed("hovered", true);
+        d3.select(`#umap-${image_id}`).classed("hovered", true);
+
+        const closest_evals = d3.select(this).attr("data-closest-evals").split(",");
+        console.log(closest_evals);
+        closest_evals.forEach((x) => {
+            d3.select(`#image-${x}`).classed("highlighted", true);
+            d3.select(`#umap-${x}`).classed("highlighted", true);
+        });
+        const closest_trains = d3.select(this).attr("data-closest-trains").split(",");
+        console.log(closest_trains);
+        closest_trains.forEach((x) => {
+            d3.select(`#image-${x}`).classed("highlighted", true);
+            d3.select(`#umap-${x}`).classed("highlighted", true);
+        });
+    })
+    .on("mouseout", function(event) {
+        const image_id = d3.select(this).attr("data-id");
+        d3.select(`#image-${image_id}`).classed("hovered", false);
+        d3.select(`#umap-${image_id}`).classed("hovered", false);
+        d3.selectAll(`.image_list img`).classed("highlighted", false);  
+        d3.selectAll(`.umap circle`).classed("highlighted", false);  
+    });
+
+</script>
+
+{% include "partials/imageview.html" %}
+
+{%- endblock content %}

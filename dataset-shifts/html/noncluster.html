@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<script src="https://d3js.org/d3.v4.min.js" charset="utf-8"></script>
+	<link rel="stylesheet" href="/static/style.css">
+	<script>
+	</script>
+	<style>
+	.t{
+		width: 42%;
+	}
+	.umap circle {
+		fill: #555;
+		opacity: 0.5;
+	}
+	.umap circle.shown {
+		fill: #070;
+		opacity: 0.8;
+	}
+
+	.umap circle.selected {
+	    fill: #ee0000;
+	    stroke: #e00;
+	    stroke-width: 4px;
+	    stroke-opacity: 1.0;
+	    opacity: 1.0;
+	}
+	.umap circle.highlighted {
+		fill: #00e;
+		opacity: 1.0;
+	}
+	.umap circle.topk {
+		fill: #00e;
+		opacity: 1.0;
+	}
+
+	.umap circle.one_selected {
+		fill: #090;
+	    stroke: #090;
+	    stroke-width: 3px;
+	    stroke-opacity: 1.0;
+	    opacity: 1.0;
+	}
+
+	.display_no{
+		display: none;
+	}
+
+	.greenborder{
+		border: 2px solid #0a0;
+
+	}
+
+	.redborder{
+		border: 2px solid #d11;
+
+	}
+
+	.blueborder{
+		border: 2px solid #11d;
+	}
+
+
+	</style>
+</head>
+<body>
+	<div id="maintitle">Study on Dataset Shifts</div>
+	<div id="timing"></div>
+	
+	<div id="wrap">
+		<div class="container">
+				<div id="outlier_ranking">
+					<h2> Most Suspicious of the New Images </h2>
+					<div class="instruction">Click one of the images below.</div>
+					<ul class="image_list">
+					</ul>
+				</div>
+			
+		</div>
+
+		<div id="histograms" class="display_no">
+			<div id="buttons">
+				<div class="button_div">
+					<button id="back_button">
+						Back to Most Suspicious Images
+					</button>
+				</div>
+
+				<div class="button_div" style="flex-grow: 1"></div>
+
+				<div class="button_div">
+					<button id="prev_button">
+						Previous Image
+					</button>
+				</div>
+
+				<div id="selected_image" class="selected_div">
+					<p style="font-weight: bold;">Selected Image: </p>
+					<div id="s_image"></div>
+				</div>
+			
+				<div class="button_div">
+					<button id="next_button">
+						Next Image
+					</button>
+				</div>
+
+				<div class="button_div" style="flex-grow: 1"></div>
+
+				<div class="button_div">
+					<button id="show_hide_button">
+					 	Show/Hide Similarity Map
+					</button>
+				</div>
+			</div>
+
+			<table id="histo">
+				<colgroup>
+			       <col span="1" style="width: 47%;">
+			       <col span="1" style="width: 47%;">
+			       <col span="1" style="width: 1%;">
+			    </colgroup>
+				<thead>
+					<tr> 
+						<th class="cright"> Similar Original Images</th>
+						<th class="cleft"> Similar New Images</th>
+						<th class="clabel"> Suspicion Score</th>
+					</tr>
+				</thead>
+				<tbody>
+						<tr id="bin-1">
+							<td id="bin-1-train" class="t cright"> </td>
+							<td id="bin-1-test" class="t cleft"> </td>
+							<td id="bin-1-score" class="clabel"> </td>
+						</tr>
+						<tr id="bin-2">
+							<td id="bin-2-train" class="t cright"> </td>
+							<td id="bin-2-test" class="t cleft"> </td>
+							<td id="bin-2-score" class="clabel"> </td>
+						</tr>
+						<tr id="bin-3">
+							<td id="bin-3-train" class="t cright"> </td>
+							<td id="bin-3-test" class="t cleft"> </td>
+							<td id="bin-3-score" class="clabel"> </td>
+						</tr>
+						<tr id="bin-4">
+							<td id="bin-4-train" class="t cright"> </td>
+							<td id="bin-4-test" class="t cleft"> </td>
+							<td id="bin-4-score" class="clabel"> </td>
+						</tr>
+						<tr id="bin-5">
+							<td id="bin-5-train" class="t cright"> </td>
+							<td id="bin-5-test" class="t cleft"> </td>
+							<td id="bin-5-score" class="clabel"> </td>
+						</tr>
+				</tbody>
+			</table>	
+		</div>
+
+		<div id="umap_test" class="umap">
+			<h3> Face Similarity Map </h3>
+			<svg width="525" height="625" id="umap_density_circles_test">
+				<g  transform="translate(10,10)">
+				</g>
+			</svg>
+		</div>
+	</div>
+
+<script src="https://www.gstatic.com/firebasejs/8.2.1/firebase-app.js"></script>
+
+<!-- TODO: Add SDKs for Firebase products that you want to use
+     https://firebase.google.com/docs/web/setup#available-libraries -->
+<script src="https://www.gstatic.com/firebasejs/8.1.2/firebase-firestore.js"></script>
+
+<script>
+  // Your web app's Firebase configuration
+  // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+  var firebaseConfig = {
+    apiKey: "AIzaSyBBFzwNiFeJ0TQNKqm2Vk1qoE3xyaVqjjM",
+    authDomain: "dataset-shift.firebaseapp.com",
+    projectId: "dataset-shift",
+    storageBucket: "dataset-shift.appspot.com",
+    messagingSenderId: "293708494381",
+    appId: "1:293708494381:web:de4796ab6edb097bf1aaa4",
+    measurementId: "G-EEH5LW5PXC"
+  };
+  // Initialize Firebase
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
+</script>
+
+
+<script>
+
+
+function log_click(from, to, used_umap=false){
+	db.collection("noncluster").add({
+        "time": new Date(),
+        "username": '{{ name }}',
+        "from": from,
+        "to": to,
+        "is_umap": used_umap
+    });
+}
+
+
+d3.json('{{ data_file }}', function(error, data) {  
+	const results = data;
+
+	var id_map = [];
+	var clicked = false;
+
+	for (var i = 0; i < results.ranking_flat.length; i++){
+		id_map.push(results.ranking_flat[i]["id"]);
+	}
+
+    const min = 60;
+	var totalSeconds = min * 20;
+	var first_alert  = false;
+	var second_alert = false;
+	var third_alert = false;
+
+	function time_convert(num)
+	{ 
+		var hours = Math.floor(num / 60);  
+		var minutes = num % 60;
+		var d = (minutes < 10 ? ':0' : ':')
+		return hours + d + minutes;         
+	}
+
+    function setTime() {
+        --totalSeconds;
+
+        var time_str = "Time remaining " + time_convert(totalSeconds)  +  ""
+        const minimum_time = 10;
+
+        if (totalSeconds < min * minimum_time && !first_alert) {
+            alert("Submission is now available, feel free to change tabs and submit your answer.");
+            first_alert = true;
+        }
+        else if(first_alert){
+            time_str = time_str + " Submission is now available, feel free to change tabs and work on your answer."
+
+        }
+        if (totalSeconds < min * 1 && !second_alert) {
+            alert("One minute left to continue using this interface.");
+            
+            second_alert = true;
+        }
+        if (totalSeconds < 0 && !third_alert) {
+        	third_alert = true;
+        	d3.selectAll("#histograms").classed("display_no", true);
+			d3.selectAll(".container").classed("display_no", true);
+            d3.select("body").html("<h3>Please close this tab and continue to the google form.</h3>")
+        }
+        d3.select("#timing").html(time_str);
+    }
+    setInterval(setTime, 1000);
+
+
+	function reset_circles(circles){
+    	circles.style("r", 3)
+			.style("opacity", .5)
+			.classed("highlighted", false)
+			.classed("selected", false);
+    }
+
+	function load_histogram(d){
+		d3.selectAll("#histograms")
+			.classed("display_no", false);
+
+		d3.selectAll(".container")
+			.classed("display_no", true);
+
+
+		d3.selectAll(".umap circle").classed("one_selected", false);
+
+
+	    d3.select("#s_cluster")
+	        .html("")
+		
+		d3.selectAll(".shown")
+			.classed("shown",false)
+
+		selected_img = d3.select("#s_image")
+			.html("")
+			.append("img")
+			.attr("id", function(d_this){return d.id;})
+			.attr("src", function(d_this){
+				return  `/static/data/celebA/${d.filename}`;
+			})
+			.classed("greenborder", true);
+
+		d3.select(`#umap_test_point_${d.id}`)
+			.raise()
+			.style("opacity", 1.0)
+			.classed("one_selected", true);		
+
+
+		const colors = ['#FF0000', '#FF3700', '#FF7300', '#FFAA00', '#FFD700']
+		for(let j = 0; j < 5; j++) {
+			d3.select(`#bin-${j+1}-test`).html("")
+			d3.select(`#bin-${j+1}-train`).html("")
+			d3.select(`#bin-${j+1}-score`).html(d.bin_range[j])
+				.style("background-color", colors[j])
+
+
+
+			d3.select(`#bin-${j+1}-test`)
+				.selectAll("img")
+				.data(d.similar_test[j])
+				.enter()
+				.append("img")
+				//.style()
+				.classed("blueborder", function(v){
+					var c = d3.selectAll(`#image-${v.id}`)
+					//return (c.empty() ? 'white' : 'blue')
+					return !c.empty();
+				})
+				.attr("src", function(v){
+					return  `/static/data/celebA/${v.filename}`;
+				})
+				.on("click", function(v){ 
+					var x = results.ranking_flat.filter(function(e){return e.id == v.id;})
+
+
+					if (x.length != 0 ){
+						log_click(d.id,v.id);
+						clicked = true;
+			        	load_histogram(x[0]);
+			        }
+				})
+				.on("mouseover", function(v){
+
+					reset_circles(circle_all_test)
+					var x = results.ranking_flat.filter(function(e){return e.id == v.id;})
+					if (x.length != 0 ){
+						d3.select(this).classed("blueborder", false);
+						d3.select(this).classed("redborder", true);
+						
+			        	x = x[0];
+				    	for(let j = 0; j < 5; j++) {
+							(x.similar_test[j]).forEach(z => {
+								d3.select(`#umap_test_point_${z.id}`)
+									.style("r", 4)
+									.style("opacity", 1.0)
+									.classed("highlighted", true);
+
+							})
+						}
+						d3.select(`#umap_test_point_${x.id}`)
+							.raise()
+							.style("r", 6)
+							.style("opacity", 1.0)
+							.classed("selected", true)
+							.classed("highlighted", false)
+					}
+		    	})
+		    	.on("mouseout", function(dd){
+					if (clicked){
+						clicked = false;
+					}
+					else{
+						reset_circles(circle_all_test)
+					}
+
+					d3.select(this).classed("redborder", false);
+					
+					d3.select(this).classed("blueborder", results.ranking_flat.filter(function(e){return e.id == dd.id;}).length != 0);
+
+			    	for(let j = 0; j < 5; j++) {
+						(d.similar_test[j]).forEach(d => {
+							d3.select(`#umap_test_point_${d.id}`)
+								.style("r", 4)
+								.style("opacity", 1.0)
+								.classed("highlighted", true);
+
+						})
+					}
+					d3.select(`#umap_test_point_${d.id}`)
+						.raise()
+						.style("r", 6)
+						.style("opacity", 1.0)
+						.classed("selected", true)
+						.classed("highlighted", false)
+		    	})
+
+
+			d3.select(`#bin-${j+1}-train`)
+				.selectAll("img")
+				.data(d.similar_train[j])
+				.enter()
+				.append("img")
+				.attr("src", function(v){
+					return  `/static/data/celebA/${v.filename}`;
+				});
+		}
+	};
+
+	var circle_all_test = d3.select("#umap_density_circles_test")
+		.selectAll("circle")
+		.data((results.all_test))
+		.enter()
+		.append("circle");
+
+	var back_button = d3.selectAll("#back_button")
+		
+	back_button.on("click", function(d){
+		d3.selectAll("#histograms")
+			.classed("display_no", true);
+
+		d3.selectAll(".container")
+			.classed("display_no", false);
+		d3.select("#s_image").html("");
+		document.getElementById("umap_test").hidden = false;
+
+		log_click(parseInt(document.getElementById("s_image").children[0].id),-1);
+
+	})
+
+	d3.selectAll("#show_hide_button").on("click", function(e){
+		var x = document.getElementById("umap_test");
+		x.hidden = !x.hidden;
+	})
+
+	const image_list = d3.selectAll("#outlier_ranking ul.image_list")
+		.selectAll("li")
+		.data(results.ranking_flat)
+		.enter()
+		.append("li")
+		.attr("class", function(d){ return "image_li" + " " + "image_li_" + d.id; })
+	    .append("img")
+		.attr("id", (d) => `image-${d.id}`)
+		.attr("src", (d) => `/static/data/celebA/${d.filename}`)
+		.on("click", function(d){ 
+			log_click(-1, d.id);
+			load_histogram(d)
+			clicked = true;
+			document.getElementById("umap_test").hidden = true;
+
+		} )
+	    .on("mouseover", function(d){
+
+			reset_circles(circle_all_test)
+	    	for(let j = 0; j < 5; j++) {
+				(d.similar_test[j]).forEach(d => {
+					d3.select(`#umap_test_point_${d.id}`)
+						.style("r", 4)
+						.style("opacity", 1.0)
+						.classed("highlighted", true);
+
+				})
+			}
+			d3.select(`#umap_test_point_${d.id}`)
+				.raise()
+				.style("r", 6)
+				.style("opacity", 1.0)
+				.classed("selected", true)
+				.classed("highlighted", false)
+		})
+		.on("mouseout", function(d){
+			if (clicked){
+				clicked = false;
+			}
+			else{
+				reset_circles(circle_all_test)
+			}
+    	});
+    
+    d3.selectAll("#next_button").on("click", function(e){
+		var img_id = parseInt(document.getElementById("s_image").children[0].id);
+		var d = id_map.indexOf(img_id) + 1;
+
+		var from = d - 1;
+		reset_circles(circle_all_test);
+
+		if (d > 199){
+			d = 0;
+		}
+
+		log_click(from, d);
+
+
+		var x = results.ranking_flat.filter(function(e){return e.id == id_map[d];})
+		load_histogram(x[0]);
+
+	})
+	d3.selectAll("#prev_button").on("click", function(e){
+		var img_id = parseInt(document.getElementById("s_image").children[0].id);
+		var d = id_map.indexOf(img_id) - 1;
+
+
+		var from = d + 1;
+		reset_circles(circle_all_test);
+
+		if (d < 0){
+			d = 199;
+		}
+		log_click(from, d);
+
+		var x = results.ranking_flat.filter(function(e){return e.id == id_map[d];})
+		load_histogram(x[0]);
+	})
+
+	var minx = 999;
+	var maxx = -999;
+	var miny = 999;
+	var maxy = -999;
+
+	results.all_test.forEach(function (d, index) {
+		maxx = Math.max(d.emb_x, maxx);
+		maxy = Math.max(d.emb_y, maxy);
+		minx = Math.min(d.emb_x, minx);
+		miny = Math.min(d.emb_y, miny);
+	});
+
+
+	const x_spread = maxx - minx;
+	const y_spread = maxy - miny;
+
+		
+	circle_all_test
+		.attr("id", d => `umap_test_point_${d.id}`)
+		.attr("cx", function(d) {
+        	var max_val = 500;
+            return 10 + (max_val*((d.emb_x - minx)/x_spread));
+        })
+        .attr("cy", function(d) {
+        	var max_val = 590;
+            return  10 + (max_val*((d.emb_y - miny)/y_spread));
+        })
+		.attr("r", function(d) {
+			return 3;
+		})
+        .attr("opacity", function(d) {
+            return 1;
+        })
+        .classed("topk", function(d) {
+        	var c = d3.selectAll(".image_li.image_li_" + d.id)
+        	return !c.empty();
+        })
+        .on("mouseout", function(d) {
+        	//d3.select(this).style("fill", "black");//.style("opacity", 1.0);
+        	d3.select(this).classed("selected", false)
+
+        	var c = d3.selectAll(".image_li.image_li_" + d.id)
+        	//var c = d3.selectAll(".image_li.image_li" + d.id)
+        	if (c.empty() === false){
+        		if (clicked){
+					clicked = false;
+				}
+				else{
+					reset_circles(circle_all_test)
+				}
+	        	c.style("filter", "None")
+        	}
+		})
+        .on("mouseover", function(d){
+        	var c = d3.selectAll(".image_li.image_li_" + d.id)
+
+        	if (c.empty() === false){
+        		d3.select(this).classed("selected", true)
+	        	c.style("filter", "brightness(150%)")
+				
+        	}
+        })
+        .on("click", function(d) {
+        	var c = d3.selectAll(".image_li.image_li_" + d.id)
+
+        	if (c.empty() === false){
+				clicked = true;
+				log_click(-1, d.id, true);
+        		reset_circles(circle_all_test)
+				load_histogram(d3.select(".image_li_"+d.id).datum());
+				document.getElementById("umap_test").hidden = true;
+
+        	}
+		});
+		
+});
+
+
+// ignore this for now
+/*
+d3.selectAll(".umap circle")
+	.on("mouseover", function(event) {
+		const image_id = d3.select(this).attr("data-id");
+		console.log(image_id)
+		d3.select(`#image-${image_id}`).classed("hovered", true);
+		d3.select(`#umap-${image_id}`).classed("hovered", true);
+	})
+	.on("mouseout", function(event) {
+		const image_id = d3.select(this).attr("data-id");
+		d3.select(`#image-${image_id}`).classed("hovered", false);
+		d3.select(`#umap-${image_id}`).classed("hovered", false);  
+	});
+
+d3.selectAll(".box_panel img")
+	.on("mouseover", function(event) {
+		const image_id = d3.select(this).attr("data-id");
+		console.log(image_id)
+		d3.select(`#image-${image_id}`).classed("hovered", true);
+		d3.select(`#umap-${image_id}`).classed("hovered", true);
+	})
+	.on("mouseout", function(event) {
+		const image_id = d3.select(this).attr("data-id");
+		d3.select(`#image-${image_id}`).classed("hovered", false);
+		d3.select(`#umap-${image_id}`).classed("hovered", false);  
+	});
+*/
+
+</script>
+
+
+
+
+</body>
+</html>

@@ -1,0 +1,570 @@
+<!-- templates/home.html -->
+
+{% extends "base.html" %}
+
+{% block content %}
+
+<div id="consent" >
+    <h1  class="title">
+        Welcome participant {{ email }} !
+    </h1>
+    <section class="hero is-info is-bold">
+        <div class="container">
+            <div class="content">
+                <p class="title"> Before we begin, please read this explanation of research:</p>
+                <button class="button is-danger" type="button" onclick="window.open('static/consentform.pdf','_blank')" >Link to pdf</button>
+                <div class="hero-body"/>
+                
+            </div>
+            <button class="button is-primary" type="button" onclick="user_consented()" >I agree to the terms of the explanation of research.</button>
+            
+        </div>
+        
+    </section>
+
+</div>
+
+
+<!-- welcome video -->
+<div hidden id="welcome">
+    <h1  class="title">
+        Welcome participant {{ email }} !
+    </h1>
+
+
+
+    <section class="hero is-info is-bold">
+        <div class="hero-body">
+            <div class="container">
+                <p class="title"> Study order:</p>
+                <p class="subtitle"> 1) Introduction video    (6 minutes) </p>
+                <p class="subtitle"> 2) Tutorial video 1      (3 minutes) </p>
+                <p class="subtitle"> 3) Task 1                (10-20 minutes) </p>
+                <p class="subtitle"> 4) Evaluation 1          (1 minute)  </p>
+                <p class="subtitle"> 5) Tutorial video 2      (3 minutes) </p>
+                <p class="subtitle"> 6) Task 2                (10-20 minutes) </p>
+                <p class="subtitle"> 7) Evaluation 2          (1 minute)  </p>
+                <p class="subtitle"> 8) Exit Survey           (5 minutes) </p>
+            </div>
+        </div>
+    </section>
+</div>
+
+<div hidden id="state_0">
+    <section class="section" id="header_1">
+        <div class="container">
+            <div class="content">
+                <p class="title"> Introduction video </p>
+                <iframe class="has-ratio" width="640" height="360"
+                    src="https://www.youtube.com/embed/TBM5uQLkeN0?showinfo=0" frameborder="0" allowfullscreen>
+                </iframe>
+            </div>
+        </div>
+    </section>
+</div>
+
+<div hidden id="state_1">
+    
+    <section class="hero is-info is-bold" id="header_2">
+        <div class="hero-body">
+            <div class="container">
+                <p class="title"> Video Recap Quiz:</p>
+                <p class="subtitle"> What does a high suspicious score represent?</p>
+            </div>
+            <div class="container">
+                <div class="control">
+                    <p class="label is-warning"> Please select one of the following:</p>
+                    <label onclick="radio_clicked()" class="radio">  1) The AI believes the image is guaranteed to contain a shift. </label>
+                    <label onclick="radio_clicked()" class="radio">  2) The AI believes the image is mostly similar to the original data, but not similar to the new data. </label>
+                    <label onclick="radio_clicked()" class="radio">  3) The AI believes the image is mostly similar to the new data, but not similar to the original data.</label>
+                </div>
+            </div>
+        </div>
+    </section>
+    <p hidden id="att1_correct" class="title"> The correct answer is 3.</p>
+    <section class="hero is-light is-medium">
+        <div class="hero-body">
+        </div>
+    </section>
+
+</div>
+
+<!-- tutorial video 1 -->
+<div hidden id="state_2">
+    <section class="hero is-info is-bold" id="header_1">
+        <div class="hero-body">
+            <div class="container">
+                <p class="title"> Tutorial video 1 </p>
+                <p id="tutorial-video1-text" class="subtitle"></p>
+            </div>
+        </div>
+    </section>
+    <section class="section">
+        <div class="container">
+            <div class="content">
+                <iframe id="tutorial-video1" class="has-ratio" width="640" height="360"
+                    src="https://www.youtube.com/embed/YE7VzlLtp-4?showinfo=0" frameborder="0" allowfullscreen>
+                </iframe>
+            </div>
+        </div>
+    </section>
+</div>
+
+
+
+<!-- attention check -->
+<div hidden id="state_3">
+    <section class="hero is-info is-bold" id="header_2">
+        <div class="hero-body">
+            <div class="container">
+                <p class="title"> Tutorial 1 Video Quiz: </p>
+                <p id="video1-att-question" class="subtitle">Is this an attention check question for video 1?</p>
+            </div>
+            <div class="container">
+                <div class="control">
+                    <p class="label is-warning"> Please select one of the following:</p>
+                    <label id="video1-att-ans1"  onclick="radio_clicked()"  class="radio"> <input type="radio" name="answer"> Yes </label>
+                    <label id="video1-att-ans2"  onclick="radio_clicked()"  class="radio"> <input type="radio" name="answer"> No </label>
+                    <label id="video1-att-ans3"  onclick="radio_clicked()"  class="radio"> <input type="radio" name="answer"> Maybe </label>
+                </div>
+            </div>
+        </div>
+    </section>
+    <p hidden id="att2_correct" class="title"> The correct answer is 1.</p>
+
+    <section class="hero is-light is-medium">
+        <div class="hero-body">
+        </div>
+    </section>
+</div>
+
+
+
+<!-- user study  -->
+<div hidden id="state_4">
+    <section class="hero is-info is-bold" id="header_3">
+        <div class="hero-body">
+            <div class="container">
+                <p class="title">Task 1 ready to begin!</p>
+                <p class="subtitle">Please maximize your browser window, if you have not yet done so.</p>
+            </div>
+        </div>
+    </section>
+    <section class="section">
+        <div class="container">
+            <div class="content">
+                <button class="button is-medium is-primary" type="button" onclick="openstudy1()">
+                    Begin task 1
+                </button>
+            </div>
+        </div>
+    </section>
+    <section class="hero is-light is-medium">
+        <div class="hero-body"/>
+    </section>
+</div>
+
+
+<!-- Google form  -->
+<div hidden id="state_5">
+    <section class="hero is-info is-bold" id="header_4">
+        <div class="hero-body">
+            <div class="container">
+                <p class="title">Task 1 evaulation</p>
+            </div>
+        </div>
+    </section>
+    <section class="section">
+        <div class="container">
+            <div class="content">
+                <button class="button is-danger" type="button" onclick="opengform1()" >Enter Task 1 Google Form</button>
+            </div>
+        </div>
+    </section>
+    <section class="hero is-light is-medium">
+        <div class="hero-body"/>
+    </section>
+</div>
+
+<!-- tutorial video 2 -->
+<div hidden id="state_6">
+    <section class="hero is-info is-bold" id="header_1">
+        <div class="hero-body">
+            <div class="container">
+                <p class="title"> Tutorial video 2 </p>
+                <p id="tutorial-video2-text" class="subtitle"></p>
+            </div>
+        </div>
+    </section>
+    <section class="section">
+        <div class="container">
+            <div class="content">
+                <iframe id="tutorial-video2" class="has-ratio" width="640" height="360"
+                    src="https://www.youtube.com/embed/YE7VzlLtp-4?showinfo=0" frameborder="0" allowfullscreen>
+                </iframe>
+            </div>
+        </div>
+    </section>
+</div>
+
+
+
+<!-- attention check -->
+<div hidden id="state_7">
+    <section class="hero is-info is-bold" id="header_2">
+        <div class="hero-body">
+            <div class="container">
+                <p class="title"> Tutorial 2 Video Quiz: </p>
+                <p id="video2-att-question" class="subtitle">Is this an attention check question for video 2?</p>
+            </div>
+            <div class="container">
+                <div  class="control">
+                    <p class="label is-warning"> Please select one of the following:</p>
+                    <label id="video2-att-ans1"  onclick="radio_clicked()"  class="radio"> <input type="radio" name="answer"> Yes </label>
+                    <label id="video2-att-ans2"  onclick="radio_clicked()"  class="radio"> <input type="radio" name="answer"> No </label>
+                    <label id="video2-att-ans3"  onclick="radio_clicked()"  class="radio"> <input type="radio" name="answer"> Maybe </label>
+                </div>
+            </div>
+        </div>
+    </section>
+    <p hidden id="att3_correct" class="title"> The correct answer is 1.</p>
+
+    <section class="hero is-light is-medium">
+        <div class="hero-body"/>
+    </section>
+</div>
+
+
+
+<!-- user study  -->
+<div hidden id="state_8">
+    <section class="hero is-info is-bold" id="header_3">
+        <div class="hero-body">
+            <div class="container">
+                <p class="title">Task 2 ready to begin!</p>
+            </div>
+        </div>
+    </section>
+    <section class="section">
+        <div class="container">
+            <div class="content">
+                 <button class="button is-medium is-primary" type="button" onclick="openstudy2()">
+                    Begin task 2
+                </button>
+            </div>
+        </div>
+    </section>
+    <section class="hero is-light is-medium">
+        <div class="hero-body"/>
+    </section>
+</div>
+
+
+<!-- Google form  -->
+<div hidden id="state_9">
+    <section class="hero is-info is-bold" id="header_4">
+        <div class="hero-body">
+            <div class="container">
+                <p class="title">Task 2 evaulation</p>
+            </div>
+        </div>
+    </section>
+    <section class="section">
+        <div class="container">
+            <div class="content">
+                <button class="button is-danger" type="button" onclick="opengform2()" >Enter Task 2 Google Form</button>
+            </div>
+        </div>
+    </section>
+    <section class="hero is-light is-medium">
+        <div class="hero-body"/>
+    </section>
+</div>
+
+<!-- final form -->
+<div hidden id="state_10">
+    <section class="hero is-info is-bold" id="header_4">
+        <div class="hero-body">
+            <div class="container">
+                <p class="title">Final study step: exit survey</p>
+                <p class="subtitle">Both tasks finished!</p>
+                <button class="button is-danger" type="button" onclick="opengform3()" >Open exit survey</button>
+            </div>
+        </div>
+    </section>
+    <section class="hero is-light is-medium">
+        <div class="hero-body"/>
+    </section>
+</div>
+
+<div hidden id="next-btn-wrapper">
+    <button id="next-btn" disabled  class="button is-primary is-outlined is-large" onclick="next()">Next</button>
+</div>
+<section class="hero is-light is-medium">
+    <div class="hero-body">
+    </div>
+</section>
+
+<!-- The core Firebase JS SDK is always required and must be listed first -->
+<script src="https://www.gstatic.com/firebasejs/8.2.1/firebase-app.js"></script>
+
+<!-- TODO: Add SDKs for Firebase products that you want to use
+     https://firebase.google.com/docs/web/setup#available-libraries -->
+<script src="https://www.gstatic.com/firebasejs/8.1.2/firebase-firestore.js"></script>
+
+<script>
+  // Your web app's Firebase configuration
+  // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+  var firebaseConfig = {
+    apiKey: "AIzaSyBBFzwNiFeJ0TQNKqm2Vk1qoE3xyaVqjjM",
+    authDomain: "dataset-shift.firebaseapp.com",
+    projectId: "dataset-shift",
+    storageBucket: "dataset-shift.appspot.com",
+    messagingSenderId: "293708494381",
+    appId: "1:293708494381:web:de4796ab6edb097bf1aaa4",
+    measurementId: "G-EEH5LW5PXC"
+  };
+  // Initialize Firebase
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
+</script>
+
+<script>
+    
+    
+
+    window.onbeforeunload = function(event)
+    {
+        return confirm("WARNING: you are about to completely restart the study. Are you sure you want to continue?");
+    };
+
+    const firsttask_cluster = ('{{ first_task }}' == "cluster");
+    const name  = '{{ name }}';
+    const id    = '{{ id }}'
+    const email = '{{ email }}';
+
+    const cluster_vid_title = "AI Grouped images tutorial"
+    const nearest_vid_title = "AI Comparison images tutorial"
+
+    const cluster_vid_url = "https://www.youtube.com/embed/pKOdkWcwXdc?showinfo=0"
+    const nearest_vid_url = "https://www.youtube.com/embed/LEJccssWvo4?showinfo=0"
+
+    const cluster_att_q = "What do the colored dots represent in the Similarity view?"
+    const cluster_att_a1= "1) Each dot represents an image, where close dots are similar and color is group membership"
+    const cluster_att_a2= "2) Each dot is how suspiscious an image is, closer to the center is closer to being an suspiscious"
+    const cluster_att_a3= "3) Each dot is assigned an image randomly, color is randomly selected in groups of 9"
+
+    const nearest_att_q = "How does the AI choose which/where images go in the table view?"
+    const nearest_att_a1= "1) It chooses the images it considers similar looking to the selected image, then sorts by suspiscion score."
+    const nearest_att_a2= "2) It chooses the images with the closest suspiscion scores, then sorts by how similar looking they are."
+    const nearest_att_a3= "3) It randomly chooses images, then sorts them by similarity, then by suspiscion score."
+
+    const cluster_eval_link = "https://docs.google.com/forms/d/e/1FAIpQLScRPE6E-1d7-jiVmoMUYz5Y7GUJU8ppgK5a_r98kthl2875Dw/viewform?usp=pp_url&entry.692555937="+email+"&entry.1949100612=" + name;
+
+
+    const noncluster_eval_link = "https://docs.google.com/forms/d/e/1FAIpQLSftqnfN4jJdjWwYLwvIatxNy7KRbx94p7tXO6RvFhSOxfmztA/viewform?usp=pp_url&entry.834316185="+email+"&entry.1949100612=" + name;
+
+    if (firsttask_cluster){
+        var c = '1';
+        var n = '2';
+    }
+    else{
+        var c = '2';
+        var n = '1';
+    }
+
+    document.getElementById("tutorial-video"+c+"-text").textContent = cluster_vid_title;
+    document.getElementById("tutorial-video"+c).src = cluster_vid_url;
+
+    document.getElementById("video"+c+"-att-question").textContent = cluster_att_q;
+    document.getElementById("video"+c+"-att-ans1").textContent = cluster_att_a1;
+    document.getElementById("video"+c+"-att-ans2").textContent = cluster_att_a2;
+    document.getElementById("video"+c+"-att-ans3").textContent = cluster_att_a3;
+    var eval1_url = (firsttask_cluster ? cluster_eval_link : noncluster_eval_link);
+
+
+
+    document.getElementById("tutorial-video"+n+"-text").textContent = nearest_vid_title;
+    document.getElementById("tutorial-video"+n).src = nearest_vid_url;
+
+    document.getElementById("video"+n+"-att-question").textContent = nearest_att_q;
+    document.getElementById("video"+n+"-att-ans1").textContent = nearest_att_a1;
+    document.getElementById("video"+n+"-att-ans2").textContent = nearest_att_a2;
+    document.getElementById("video"+n+"-att-ans3").textContent = nearest_att_a3;
+    var eval2_url = (firsttask_cluster ? noncluster_eval_link : cluster_eval_link);
+
+
+    function user_consented(){
+        db.collection("consented").add({
+            "id": id,
+            "time": new Date(),
+            "page": "home.html",
+            "username": name
+        });
+        document.getElementById('consent').hidden=true; 
+        document.getElementById('welcome').hidden=false; 
+        document.getElementById('state_0').hidden=false;
+        document.getElementById("next-btn-wrapper").hidden = false;
+    }
+
+    function openstudy1(){
+        window.open('{{ url_for('main.study1') }}','_blank');
+    }
+    function opengform1(){
+        set_button_enable(true);
+        window.open(eval1_url,'_blank');
+    }
+
+    function openstudy2(){
+        window.open('{{ url_for('main.study2') }}','_blank');
+    }
+    function opengform2(){
+        set_button_enable(true);
+        window.open(eval2_url,'_blank');
+    }
+
+
+    function opengform3(){
+
+        window.location.href="https://docs.google.com/forms/d/e/1FAIpQLSfMKllTSTz9evrY614Tn7cqR_NkSAUtUiz19CusSQjn8niC3w/viewform?usp=pp_url&entry.1708527064="+email+"&entry.1949100612="  + name;
+    }
+
+    // tutorial transitions
+    function transition() {
+        let element = document.getElementById("state_" + state);
+        //element.scrollIntoView({ behavior: "smooth", block: "start", inline: "nearest" });
+    }
+
+    function set_button_enable(do_enable){
+        if (do_enable){
+            time_to_enable = 0;
+            document.getElementById("next-btn").disabled = false;
+            document.getElementById("next-btn").classList.remove('is-outlined');
+        }else{
+            document.getElementById("next-btn").disabled = true;
+            document.getElementById("next-btn").classList.add('is-outlined');
+        }
+    }
+    
+    function radio_clicked(){
+        if (state >= 0){
+            set_button_enable(true);
+            document.getElementById("att1_correct").hidden = false;
+            document.getElementById("att2_correct").hidden = true;
+            document.getElementById("att3_correct").hidden = true;
+            console.log("here1")
+
+        }
+        if (state >= 2){
+            set_button_enable(true);
+
+            document.getElementById("att2_correct").hidden = false;
+            document.getElementById("att3_correct").hidden = true;
+            console.log("here2")
+
+        }
+        if (state >= 5){
+            set_button_enable(true);
+            document.getElementById("att3_correct").hidden = false;
+            console.log("here3")
+
+        }
+    }
+
+
+    // seconds to next state
+    let time_to_enable = 120;
+
+    // current state
+    let state = 0;
+    let elapsed_seconds = 0
+    let admin = name.includes("admin");
+
+    function update() {
+        ++elapsed_seconds;
+        //console.log(admin);
+        if (elapsed_seconds > time_to_enable || admin){
+            set_button_enable(true);
+
+            elapsed_seconds = 0;
+            
+        }
+    }
+
+    // callback every second
+    setInterval(update, 1000);
+    console.log("hello");
+    let element = document.getElementById("state_1");
+    //console.log(element);
+    let progressbar = document.getElementById("progressb");
+
+    
+
+    function next() {
+        state++;
+
+        db.collection("visits").add({
+            "id": id,
+            "time": new Date(),
+            "page": "home.html",
+            "username": name,
+            "state": state
+        });
+        
+        let element = document.getElementById("state_" + state);
+        element.hidden = false;
+        element.scrollIntoView({ behavior: "smooth", block: "start", inline: "nearest" });
+        set_button_enable(false);
+
+        
+        switch(state){
+            case 1: //first attention check
+                time_to_enable = 100000;
+                progressbar.value = 10;
+                break;
+            case 2: //first tutorial video
+                time_to_enable = 60;
+                progressbar.value = 11;
+                break;
+            case 3: //attention check
+                time_to_enable = 10000;
+                progressbar.value = 16;
+                break;
+            case 4: // user study
+                time_to_enable = 200;
+                progressbar.value = 20;
+                break;
+            case 5: // Google form
+                time_to_enable = 10000;
+                progressbar.value = 45;
+                break;
+            case 6: // 2nd tutorial video
+                progressbar.value = 50;
+                break;
+            case 7: // attention check
+                time_to_enable = 10000;
+                progressbar.value = 60;
+                break;
+            case 8: //2nd user study
+                time_to_enable = 200;
+                progressbar.value = 65;
+                break;
+            case 9: // Google form
+                time_to_enable = 10000;
+                progressbar.value = 95;
+                break;
+            case 10: // Google form final & study done!
+                progressbar.value = 100;
+                document.getElementById("next-btn-wrapper").hidden = true;
+                document.getElementById("welcome").hidden = true
+
+                for(var i =0; i <10; i++){
+                    document.getElementById("state_" + i).hidden = true;
+                }
+
+                break;
+        }
+    }
+
+</script>
+{% endblock %}

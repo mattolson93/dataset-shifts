@@ -1,0 +1,137 @@
+{% extends "base.html" -%}
+
+{% block content -%}
+
+<script>
+// document state
+let last_clicked_image = null;
+
+const data = {{ data['test'] }};
+console.log(data);
+
+</script>
+
+
+<div class="container">
+    <div id="trainset_box" class="box_panel">
+    <h2> Training set images by clusters </h2>
+    <ul class="cluster_list">
+        {% for cluster in data['train'] %}
+        <li id="test_cluster{{loop.index0}}">
+            <h3 class="cluster_title" data-cluster-no="{{loop.index0}}">Group #{{loop.index0}}</h3>
+            <div class="scroll_collapsed">
+                <ul class="image_list">
+                    {% for score in cluster %}
+                    <li>
+                        <img 
+                            id="image-{{score.id}}"
+                            src="/static/{{score.path[1:]}}"
+                            data-id="{{score.id}}">
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </li>
+        {% endfor %}
+    </ul>
+    </div>
+
+    <div id="testset_box" class="box_panel">
+    <h2> Test set images by clusters </h2>
+    <ul class="cluster_list">
+        {% for cluster in data['test'] %}
+        <li id="test_cluster{{loop.index0}}">
+            <h3 class="cluster_title" data-cluster-no="{{loop.index0}}">Group #{{loop.index0}}</h3>
+            <div class="scroll_collapsed">
+                <ul class="image_list">
+                    {% for score in cluster %}
+                    <li>
+                        <img 
+                            id="image-{{score.id}}"
+                            src="/static/{{score.path[1:]}}"
+                            data-id="{{score.id}}">
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </li>
+        {% endfor %}
+    </ul>
+    </div>
+
+
+    <div id="umap_train" class="umap">
+        <h3> UMAP Density Space train</h3>
+        <svg width="{{umap_size + 20}}" height="{{umap_size + 20}}">
+            <g id="umap_density_circles" transform="translate(10,10)">
+            {% for item in data['flatted_train']|reverse %}
+                <circle id="umap-{{item.id}}" data-id="{{item.id}}" cx="{{item.emb_x * umap_size}}" cy="{{(1.0 - item.emb_y) * umap_size}}" r="3" data-cluster-no="{{item.cluster_no}}"></circle>
+            {% endfor %}
+            </g>
+        </svg>
+    </div>
+    
+    <div id="umap_test" class="umap">
+        <h3> UMAP Density Space test</h3>
+        <svg width="{{umap_size + 20}}" height="{{umap_size + 20}}">
+            <g id="umap_density_circles" transform="translate(10,10)">
+            {% for item in data['flatted_test']|reverse %}
+                <circle id="umap-{{item.id}}" data-id="{{item.id}}" cx="{{item.emb_x * umap_size}}" cy="{{(1.0 - item.emb_y) * umap_size}}" r="3" data-cluster-no="{{item.cluster_no}}"></circle>
+            {% endfor %}
+            </g>
+        </svg>
+    </div>
+</div>
+
+
+<script>
+// console.log("xxx")
+
+// const data2 = {{ data['test'] }};
+// console.log(data);
+
+var color = d3.scaleOrdinal(d3.schemeCategory10); // color(i) returns rgb hex
+
+d3.selectAll(".cluster_title")
+    .style("color", function() { 
+        return color(d3.select(this).attr("data-cluster-no"));
+    });
+
+d3.selectAll(".umap circle")
+    .filter(function() {
+        return +d3.select(this).attr("data-cluster-no") >= 0;
+    })
+    .style("fill", function() { 
+        return color(d3.select(this).attr("data-cluster-no"));
+    });
+
+d3.selectAll(".umap circle")
+    .on("mouseover", function(event) {
+        console.log("x")
+        const image_id = d3.select(this).attr("data-id");
+        console.log(image_id)
+        d3.select(`#image-${image_id}`).classed("hovered", true);
+        d3.select(`#umap-${image_id}`).classed("hovered", true);
+    })
+    .on("mouseout", function(event) {
+        const image_id = d3.select(this).attr("data-id");
+        d3.select(`#image-${image_id}`).classed("hovered", false);
+        d3.select(`#umap-${image_id}`).classed("hovered", false);  
+    });
+
+d3.selectAll(".box_panel img")
+    .on("mouseover", function(event) {
+        const image_id = d3.select(this).attr("data-id");
+        console.log(image_id)
+        d3.select(`#image-${image_id}`).classed("hovered", true);
+        d3.select(`#umap-${image_id}`).classed("hovered", true);
+    })
+    .on("mouseout", function(event) {
+        const image_id = d3.select(this).attr("data-id");
+        d3.select(`#image-${image_id}`).classed("hovered", false);
+        d3.select(`#umap-${image_id}`).classed("hovered", false);  
+    });
+
+</script>
+
+{%- endblock content %}

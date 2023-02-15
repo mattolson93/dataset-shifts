@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<script src="https://d3js.org/d3.v4.min.js" charset="utf-8"></script>
+	<link rel="stylesheet" href="/static/style.css">
+	<script>
+	</script>
+	<style>
+	.t{
+		width: 42%;
+	}
+
+	.cluster_li{
+		width: 225px;
+		height: 320px;
+		margin-right: 10px;
+		margin-bottom: 15px;
+		padding: 5px;
+	}
+    .image_list li{
+		display: inline-block;
+	}
+	.umap circle {
+		fill: #555;
+		opacity: 0.5;
+	}
+	.umap circle.shown {
+		fill: #070;
+		opacity: 1.0;
+	}
+
+
+	.umap circle.highlighted {
+	    fill: #000;
+	    stroke: #000;
+	    stroke-width: 2px;
+	    stroke-opacity: 1.0;
+	    opacity: 1.0;
+	}
+
+	.display_no{
+		display: none;
+	}
+
+	#s_cluster {
+		font-size: 23px;
+	}
+
+	</style>
+</head>
+<body>
+	<div id="maintitle">Study on Dataset Shifts</div>
+	<div id="timing"></div>
+	
+	<div id="wrap">
+	
+		<div class="container">
+			<div id="outlier_ranking">
+				<h2> AI's Grouped Suspicious Images</h2>
+				<div class="instruction">Click one of the group images below.</div>
+				<ul class="image_list">
+				</ul>
+			</div>
+		</div>
+
+		<div id="histograms" class="display_no">
+			<div id="buttons">
+				<div class="button_div">
+					<button id="back_button">
+						Back to Grouped Images
+					</button>
+				</div>
+
+				<div class="button_div" style="flex-grow: 1"></div>
+
+				<div class="button_div">
+					<button id="prev_button">
+						Previous Group
+					</button>
+				</div>
+
+				<div id="selected_image" class="selected_div">
+					<p style="font-weight: bold;">Selected Group Number: </p>
+					<p id="s_cluster"></p>
+				</div>
+			
+				<div class="button_div">
+					<button id="next_button">
+						Next Group
+					</button>
+				</div>
+
+				<div class="button_div" style="flex-grow: 1"></div>
+
+				<div class="button_div">
+					<button id="show_hide_button">
+					 	Show/Hide Similarity Map
+					</button>
+				</div>
+			</div>
+
+
+			<table id="histo">
+				<colgroup>
+			       <col span="1" style="width: 47%;">
+			       <col span="1" style="width: 47%;">
+			       <col span="1" style="width: 1%;">
+			    </colgroup>
+				<thead>
+					<tr> 
+						<th class="cright"> Original Data</th>
+						<th class="cleft"> New Data</th>
+						<th class="clabel"> Suspicion Score</th>
+					</tr>
+				</thead>
+				<tbody>
+					<tr id="bin-1">
+						<td id="bin-1-train" class="t cright"> </td>
+						<td id="bin-1-test" class="t cleft"> </td>
+						<td id="bin-1-score" class="clabel"> </td>
+					</tr>
+					<tr id="bin-2">
+						<td id="bin-2-train" class="t cright"> </td>
+						<td id="bin-2-test" class="t cleft"> </td>
+						<td id="bin-2-score" class="clabel"> </td>
+					</tr>
+					<tr id="bin-3">
+						<td id="bin-3-train" class="t cright"> </td>
+						<td id="bin-3-test" class="t cleft"> </td>
+						<td id="bin-3-score" class="clabel"> </td>
+					</tr>
+					<tr id="bin-4">
+						<td id="bin-4-train" class="t cright"> </td>
+						<td id="bin-4-test" class="t cleft"> </td>
+						<td id="bin-4-score" class="clabel"> </td>
+					</tr>
+					<tr id="bin-5">
+						<td id="bin-5-train" class="t cright"> </td>
+						<td id="bin-5-test" class="t cleft"> </td>
+						<td id="bin-5-score" class="clabel"> </td>
+					</tr>
+				</tbody>
+			</table>
+		</div>
+
+		<div id="umap_test" class="umap">
+			<h3> Face Similarity Map </h3>
+			<svg width="525" height="625" id="umap_density_circles_test">
+				<g  transform="translate(10,10)">
+				
+				</g>
+			</svg>
+		</div>
+	</div>
+
+<script src="https://www.gstatic.com/firebasejs/8.2.1/firebase-app.js"></script>
+
+<!-- TODO: Add SDKs for Firebase products that you want to use
+     https://firebase.google.com/docs/web/setup#available-libraries -->
+<script src="https://www.gstatic.com/firebasejs/8.1.2/firebase-firestore.js"></script>
+
+<script>
+  // Your web app's Firebase configuration
+  // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+  var firebaseConfig = {
+    apiKey: "AIzaSyBBFzwNiFeJ0TQNKqm2Vk1qoE3xyaVqjjM",
+    authDomain: "dataset-shift.firebaseapp.com",
+    projectId: "dataset-shift",
+    storageBucket: "dataset-shift.appspot.com",
+    messagingSenderId: "293708494381",
+    appId: "1:293708494381:web:de4796ab6edb097bf1aaa4",
+    measurementId: "G-EEH5LW5PXC"
+  };
+  // Initialize Firebase
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
+</script>
+
+
+<script>
+
+
+function log_click(from, to, used_umap=false){
+	db.collection("cluster").add({
+        "time": new Date(),
+        "username": '{{ name }}',
+        "from": from,
+        "to": to,
+        "is_umap": used_umap
+    });
+}
+
+
+d3.json('{{ data_file }}', function(error, data) { 
+
+	const min = 60;
+	var totalSeconds = min * 20;
+	var first_alert  = false;
+	var second_alert = false;
+	var third_alert = false;
+
+	function time_convert(num)
+	{ 
+		var hours = Math.floor(num / 60);  
+		var minutes = num % 60;
+		var d = (minutes < 10 ? ':0' : ':')
+		return hours + d + minutes;         
+	}
+
+    function setTime() {
+        --totalSeconds;
+
+    	var time_str = "Time remaining " + time_convert(totalSeconds)  +  ""
+        const minimum_time = 10;
+
+        if (totalSeconds < min * minimum_time && !first_alert) {
+            alert("Submission is now available, feel free to change tabs and submit your answer.");
+            first_alert = true;
+        }
+        else if(first_alert){
+            time_str = time_str + " Submission is now available, feel free to change tabs and work on your answer."
+
+        }
+        if (totalSeconds < min * 1 && !second_alert) {
+            alert("One minute left to continue using this interface.");
+            
+            second_alert = true;
+        }
+        if (totalSeconds < 0 && !third_alert) {
+        	third_alert = true;
+        	d3.selectAll("#histograms").classed("display_no", true);
+			d3.selectAll(".container").classed("display_no", true);
+            d3.select("body").html("<h3>Please close this tab and continue to the google form.</h3>")
+        }
+        d3.select("#timing").html(time_str);
+    }
+    setInterval(setTime, 1000);
+
+
+    function histo_view(val){
+    	d3.selectAll("#histograms").classed("display_no", !val);
+		d3.selectAll("#fullpage").classed("doflex", true);
+
+		d3.selectAll(".container").classed("display_no", val);
+
+    }
+
+    histo_view(false);
+	var cur_cluster_log = -1;
+	function load_histogram(d, clicked_dot=false){
+		histo_view(true);
+
+		log_click(cur_cluster_log, d.cluster_no, clicked_dot);
+		cur_cluster_log = d.cluster_no;
+
+	    d3.select("#s_cluster")
+	        .html("")
+		
+		d3.selectAll(".shown")
+			.classed("shown",false)
+
+	    d3.select("#s_cluster")
+	        .html(d.cluster_no)
+
+		const colors = ['#FF0000', '#FF3700', '#FF7300', '#FFAA00', '#FFD700']
+
+		for(let j = 0; j < 5; j++) {
+			d3.select(`#bin-${j+1}-test`).html("")
+			d3.select(`#bin-${j+1}-train`).html("")
+			d3.select(`#bin-${j+1}-score`).html(d.bin_range[j])
+				.style("background-color", colors[j])
+				.style("font-weight", "bold")
+
+
+			d3.select(`#bin-${j+1}-test`)
+				.selectAll("img")
+				.data(d.more_test[j])
+				.enter()
+				.append("img")
+				.attr("src", function(v){
+					return  `/static/data/celebA/${v.filename}`;
+				});
+			
+
+			d3.select(`#bin-${j+1}-train`)
+				.selectAll("img")
+				.data(d.similar_train[j])
+				.enter()
+				.append("img")
+				.attr("src", function(v){
+					return  `/static/data/celebA/${v.filename}`;
+				});
+			(d.more_test[j]).forEach(e => {
+				d3.select(`#umap_test_point_${e.id}`)
+					.style("r", 6)
+					.style("opacity", 1.0)
+					.classed("highlighted", true);
+
+			})
+		}
+	};
+
+
+
+
+
+	const colorArray = ['#000000', '#023eff', '#ff7c00', '#1ac938', '#e8000b', '#8b2be2', '#9f4800', '#f14cc1', '#a3a3a3', '#ffc400', '#00d7ff'];
+	const results = data;
+
+	var back_button = d3.selectAll("#back_button")
+		
+	back_button.on("click", function(d){
+		histo_view(false);
+		document.getElementById("umap_test").hidden = false;
+
+		log_click(cur_cluster_log,-1);
+		cur_cluster_log = -1;
+
+	})
+
+		
+
+	var lists = d3.selectAll("#outlier_ranking ul.image_list")
+		.selectAll("li")
+		.data(results.ranking_clusters)
+		.enter()
+		.append("li")
+        .html(function(d){
+        	return "<p style=\"font-weight: bold; color: "+ colorArray[d.cluster_no+1] +"\">Group #" + d.cluster_no  + " </p>"; })
+        .attr("class", function(d){
+            classes = "cluster_li" + " " + "cluster_li_" + d.cluster_no;
+            return classes
+        });
+        //.style("white-space","nowrap")
+   	
+   	lists.append("svg")
+		.attr("width", 0)
+		.attr("height", 0)
+		.append("circle")
+        .attr("id",function(d) {
+            return d.cluster_no+1;
+        })
+        .attr("r", 32)
+        .attr("cx", 36)
+        .attr("cy", 32)
+        .attr("opacity", 1)
+        .style("fill", function(d) {
+            return colorArray[d.cluster_no+1];
+        });
+    //lists.append("svg")
+    //	.append("text")
+	//    .attr({"x": 20, "y": 20, "text":"hello"})
+	//    .text( function (d) { return "( " + d.cluster_no + ", " + d.cluster_no +" )"; })
+
+        //.append("text")
+        //.text(function(d){"Group #" + d.cluster_no})
+  
+
+    d3.selectAll(".cluster_li")
+        .selectAll("img")
+        .data(function(d){
+            return d.top_images.slice(0,16);
+        })
+        .enter()
+        .append('img')
+        .attr("src", (d) => `/static/data/celebA/${d.filename}`)
+
+
+    var circle_test = d3.select("#umap_density_circles_test")
+		.selectAll("circle")
+        .data(results.all_test)
+        .enter()
+        .append("circle");
+
+    function reset_circles(circles){
+    	circles.style("r", 3)
+			.style("opacity", .5)
+			.classed("highlighted", false);
+    }
+	
+	var minx = 999;
+	var maxx = -999;
+	var miny = 999;
+	var maxy = -999;
+	console.log(results.all_test);
+
+	results.all_test.forEach(function (d, index) {
+		maxx = Math.max(d.emb_x, maxx);
+		maxy = Math.max(d.emb_y, maxy);
+		minx = Math.min(d.emb_x, minx);
+		miny = Math.min(d.emb_y, miny);
+	});
+
+	const x_spread = maxx - minx;
+	const y_spread = maxy - miny;
+
+
+
+	circle_test
+		.attr("id", d => `umap_test_point_${d.id}`)
+        .attr("cx", function(d) {
+        	var max_val = 500;
+            return 10 + (max_val*((d.emb_x - minx)/x_spread));
+        })
+        .attr("cy", function(d) {
+        	var max_val = 590;
+            return  10 + (max_val*((d.emb_y - miny)/y_spread));
+        })
+        .attr("r", function(d) {
+            return 3;
+        })
+        .attr("opacity", function(d) {
+            return 1;
+        })
+        .style("fill", function(d) {
+            return colorArray[d.cluster_no+1];
+        })
+		.on("mouseout", function(d) {
+        	//d3.select(this).style("fill", "black");//.style("opacity", 1.0);
+        	d3.select(this).classed("highlighted", false).style("r", 3).style("opacity", 0.5)
+
+        	var c = d3.selectAll(".cluster_li.cluster_li_" + d.cluster_no)
+        	if (c.empty() === false){
+				c.classed("mouseovered", false);
+        	}
+		})
+        .on("mouseover", function(d){
+        	d3.select(this).classed("highlighted", true).style("r", 6).style("opacity", 1.0)
+					
+
+
+        	var c = d3.selectAll(".cluster_li.cluster_li_" + d.cluster_no)
+        	if (c.empty() === false){
+				c.classed("mouseovered", true);
+        	}
+        })
+        .on("click", function(d) {
+        	var c = d3.selectAll(".cluster_li.cluster_li_" + d.cluster_no)
+        	if (c.empty() === false){
+        		reset_circles(circle_test)
+				load_histogram(d3.select(".cluster_li_"+d.cluster_no).datum(), true);
+				//document.getElementById("umap_test").hidden = true;
+
+
+        	}
+		});
+
+    lists.on("mouseover", function(d){
+    	reset_circles(circle_test);
+    	for(let j = 0; j < 5; j++) {
+			(d.more_test[j]).forEach(d => {
+				d3.select(`#umap_test_point_${d.id}`)
+					.style("r", 6)
+					.style("opacity", 1.0)
+					.classed("highlighted", true);
+
+			})
+		}
+		d3.select(this).classed("mouseovered", true);
+    })
+    .on("mouseout.isnothovered", function() {
+    	d3.select(this).classed("mouseovered", false);
+    });
+
+    lists.on("click", function(d){
+    	reset_circles(circle_test)
+    	load_histogram(d)
+		document.getElementById("umap_test").hidden = true;
+    	
+    })
+
+    d3.selectAll("#show_hide_button").on("click", function(e){
+		var x = document.getElementById("umap_test");
+		x.hidden = !x.hidden;
+	})
+
+    d3.selectAll("#next_button").on("click", function(e){
+		var clust_num = document.getElementById("s_cluster");
+		var cluster_number = clust_num.textContent;
+		var d = parseInt(cluster_number) + 1;
+		reset_circles(circle_test)
+
+		if (d > 10){
+			d = 1;
+		}
+
+		let data = d3.select(".cluster_li_"+d).datum() // Gives you the data object with everything you need!
+
+		load_histogram(data);
+	})
+	d3.selectAll("#prev_button").on("click", function(e){
+		var clust_num = document.getElementById("s_cluster");
+		var cluster_number = clust_num.textContent;
+		var d = parseInt(cluster_number) - 1;
+		reset_circles(circle_test)
+
+		if (d < 1){
+			d = 10;
+		}
+
+		let data = d3.select(".cluster_li_"+d).datum() // Gives you the data object with everything you need!
+		load_histogram(data)
+	})
+
+
+
+    
+	
+		
+        //cluster_no
+
+	// TODO Thuy-Vy: umap train
+	// d3.select("#umap_train ..")
+	//
+	//	.data(results.all_train)
+	//
+
+});
+
+
+// ignore this for now
+/*
+d3.selectAll(".umap circle")
+	.on("mouseover", function(event) {
+		const image_id = d3.select(this).attr("data-id");
+		console.log(image_id)
+		d3.select(`#image-${image_id}`).classed("hovered", true);
+		d3.select(`#umap-${image_id}`).classed("hovered", true);
+	})
+	.on("mouseout", function(event) {
+		const image_id = d3.select(this).attr("data-id");
+		d3.select(`#image-${image_id}`).classed("hovered", false);
+		d3.select(`#umap-${image_id}`).classed("hovered", false);  
+	});
+
+d3.selectAll(".box_panel img")
+	.on("mouseover", function(event) {
+		const image_id = d3.select(this).attr("data-id");
+		console.log(image_id)
+		d3.select(`#image-${image_id}`).classed("hovered", true);
+		d3.select(`#umap-${image_id}`).classed("hovered", true);
+	})
+	.on("mouseout", function(event) {
+		const image_id = d3.select(this).attr("data-id");
+		d3.select(`#image-${image_id}`).classed("hovered", false);
+		d3.select(`#umap-${image_id}`).classed("hovered", false);  
+	});
+*/
+
+</script>
+
+
+
+
+</body>
+</html>
